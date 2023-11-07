@@ -81,35 +81,53 @@ static int lunix_chrdev_state_update(struct lunix_chrdev_state_struct *state)
 	 * holding only the private state semaphore
 	 */
 
-	// First, get measurement
-	if(state->type == BATT) new_data = lookup_voltage[new_data_raw->values[0]];
-	else if(state->type == TEMP) new_data = lookup_temperature[new_data_raw->values[0]];
-	else new_data = lookup_light[new_data_raw->values[0]];
+	if(state->mode == CHRDEV_MODE_COOKED) {
+		// Return the formatted decimal numbers
 
-	debug("Received raw number %ld", new_data);
+		// First, get measurement
+		if(state->type == BATT) new_data = lookup_voltage[new_data_raw->values[0]];
+		else if(state->type == TEMP) new_data = lookup_temperature[new_data_raw->values[0]];
+		else new_data = lookup_light[new_data_raw->values[0]];
 
-	// Update the timestamp in state
-	state->buf_timestamp = new_data_raw->last_update;
+		debug("Received number %ld", new_data);
 
-	if(new_data < 0) {
-		state->buf_data[(state->buf_lim)++] = '-';
-		new_data = -1 * new_data;
-	}
+		// Update the timestamp in state
+		state->buf_timestamp = new_data_raw->last_update;
 
-	for(i = 0; i < 3; i++) {
-		state->buf_data[state->buf_lim + 5 - i] = '0' + new_data%10;
-		new_data /= 10;
-	}
+		if(new_data < 0) {
+			state->buf_data[(state->buf_lim)++] = '-';
+			new_data = -1 * new_data;
+		}
 
-	state->buf_data[state->buf_lim + 2] = '.';
-	for(i = 0; i < 2; i++) {
-		state->buf_data[state->buf_lim + 1 - i] = '0' + new_data%10;
-		new_data /= 10;
-	}
+		for(i = 0; i < 3; i++) {
+			state->buf_data[state->buf_lim + 5 - i] = '0' + new_data%10;
+			new_data /= 10;
+		}
 
-	state->buf_lim += 6;
-	while(state->buf_lim % 10) {
-		state->buf_data[state->buf_lim++] = ' ';
+		state->buf_data[state->buf_lim + 2] = '.';
+		for(i = 0; i < 2; i++) {
+			state->buf_data[state->buf_lim + 1 - i] = '0' + new_data%10;
+			new_data /= 10;
+		}
+
+		state->buf_lim += 6;
+
+		while(state->buf_lim % 10) {
+			state->buf_data[state->buf_lim++] = ' ';
+		}
+	} else{
+		// Just return the raw 16-bit values
+
+		// First, get measurement
+		if(state->type == BATT) new_data = new_data_raw->values[0];
+		else if(state->type == TEMP) new_data = new_data_raw->values[0];
+		else new_data = new_data_raw->values[0];
+
+		// Update the timestamp in state
+		state->buf_timestamp = new_data_raw->last_update;
+
+		state->buf_data[(state->buf_lim)++] = new_data%(1<<8);
+		state->buf_data[(state->buf_lim)++] = new_data>>8;
 	}
 
 	return 0;
@@ -150,6 +168,7 @@ static int lunix_chrdev_open(struct inode *inode, struct file *filp)
 	chrdv->buf_lim = 0;
 	chrdv->buf_timestamp = 0;
 	sema_init(&chrdv->lock, 1);
+	chrdv->mode = CHRDEV_MODE_COOKED;
 	filp->private_data = chrdv;
 	
 	ret = 0;
@@ -166,8 +185,23 @@ static int lunix_chrdev_release(struct inode *inode, struct file *filp)
 
 static long lunix_chrdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
-	/* Why? */
-	return -EINVAL;
+	struct lunix_chrdev_state_struct *state;
+	int ret = 0;
+
+	state = filp->private_data;
+	WARN_ON(!state);
+	
+	switch(cmd) {
+		case LUNIX_IOC_MODE:
+			if(arg == CHRDEV_MODE_RAW || arg == CHRDEV_MODE_COOKED) {
+				state->mode = arg;
+				ret = 0;
+			}else ret = -ENOTTY;
+			break;
+		default:
+			ret = -ENOTTY;
+	}
+	return ret;
 }
 
 static ssize_t lunix_chrdev_read(struct file *filp, char __user *usrbuf, size_t cnt, loff_t *f_pos)

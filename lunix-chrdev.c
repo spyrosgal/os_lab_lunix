@@ -207,6 +207,8 @@ static ssize_t lunix_chrdev_read(struct file *filp, char __user *usrbuf, size_t 
 	sensor = state->sensor;
 	WARN_ON(!sensor);
 
+	debug("Entered here");
+
 	/* Lock? */
 	if(down_interruptible(&state->lock)) return -ERESTARTSYS;
 
@@ -304,7 +306,7 @@ int lunix_chrdev_init(void)
 	unsigned int lunix_minor_cnt;
 	char name[] = "LUNIX:TNG";
 
-	lunix_minor_cnt = lunix_sensor_cnt >> 3;
+	lunix_minor_cnt = lunix_sensor_cnt << 3;
 	
 	debug("initializing character device\n");
 	cdev_init(&lunix_chrdev_cdev, &lunix_chrdev_fops);
@@ -323,7 +325,7 @@ int lunix_chrdev_init(void)
 	
 	/* ? */
 	/* cdev_add? */
-	ret = cdev_add(&lunix_chrdev_cdev, dev_no, 1);
+	ret = cdev_add(&lunix_chrdev_cdev, dev_no, lunix_minor_cnt);
 	if (ret < 0) {
 		debug("failed to add character device\n");
 		goto out_with_chrdev_region;

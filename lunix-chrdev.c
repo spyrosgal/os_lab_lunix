@@ -126,8 +126,8 @@ static int lunix_chrdev_state_update(struct lunix_chrdev_state_struct *state)
 		// Update the timestamp in state
 		state->buf_timestamp = new_data_raw->last_update;
 
-		state->buf_data[(state->buf_lim)++] = new_data%(1<<8);
-		state->buf_data[(state->buf_lim)++] = new_data>>8;
+		state->buf_data[(state->buf_lim)++] = new_data >> 8;
+		state->buf_data[(state->buf_lim)++] = new_data & 0xFF;
 	}
 
 	return 0;

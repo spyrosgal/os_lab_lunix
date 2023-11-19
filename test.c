@@ -2,9 +2,11 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include "lunix-chrdev.h"
+#include "lunix.h"
 
 int main(int argc, char *argv[]){
     if(argc == 1) {
@@ -61,6 +63,15 @@ int main(int argc, char *argv[]){
         sleep(10);
         for(int i = 0; i < 5; i++) {
             kill(p[i], SIGKILL);
+        }
+    }else if(!strcmp(argv[1], "mmap")) {
+        struct lunix_msr_data_struct *t = mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, fd, 0);
+    
+        printf("%p\n", t);
+
+        while(1) {
+            printf("%d\n", t->values[0]);
+            sleep(1);
         }
     }
     

@@ -92,5 +92,6 @@ void lunix_sensor_update(struct lunix_sensor_struct *s,
 	 * And wake up any sleepers who may be waiting on
 	 * fresh data from this sensor.
 	 */
-	wake_up_interruptible(&s->wq);
+	// Changed by me!
+	wake_up_interruptible_all(&s->wq);
 }

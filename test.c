@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-    int fd = open((argv[2]), O_RDONLY);
+    int fd = open((argv[2]), O_RDONLY | O_NONBLOCK);
     if(!strcmp(argv[1], "ioctl")) {
         if(!strcmp(argv[3], "RAW")) {
             ioctl(fd, LUNIX_IOC_MODE, CHRDEV_MODE_RAW);
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
             if(!p[i]) {
                 while(1) {
                     char t[11];
-                    int tempres = read(fd, t, 2);
+                    int tempres = read(fd, t, 3);
                     if(tempres < 0) {
                         printf("Something unexpected happened\n");
                     }else if(tempres) {

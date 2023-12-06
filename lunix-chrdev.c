@@ -231,7 +231,7 @@ static ssize_t lunix_chrdev_read(struct file *filp, char __user *usrbuf, size_t 
 			// Either way we have to unlock.
 			up(&state->lock);
 
-			if(filp->f_flags & O_NONBLOCK) return -EAGAIN; // If O_NONBLOCK is chosen, we should just leave
+			if(filp->f_flags & O_NONBLOCK) return 0; // If O_NONBLOCK is chosen, we should just leave
 
 			debug("Going to sleep");
 			if(wait_event_interruptible(sensor->wq, (lunix_chrdev_state_needs_refresh(state)))) return -ERESTARTSYS;

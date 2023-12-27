@@ -23,10 +23,10 @@ int main(int argc, char *argv[]){
                 int tempres = read(fd, t, 2);
                 if(tempres < 0) {
                     printf("Something unexpected happened\n");
-                }else {
-                    int d = 0;
-                    d = ((int)(t[0]) << 8) + (int)t[1];
-                    printf("%d\n", d);
+                }else if(tempres) {
+                    uint16_t d = 0;
+                    d = *((uint16_t *) t);
+                    printf("%u\n", d);
                 }
             }
         }else if(!strcmp(argv[3], "COOKED")) {

@@ -60,6 +60,7 @@ static int lunix_chrdev_state_update(struct lunix_chrdev_state_struct *state)
 	struct lunix_msr_data_struct *new_data_raw;
 	long new_data;
 	int i = 0;
+	uint16_t *temp;
 
 	sensor = state->sensor;
 
@@ -123,11 +124,15 @@ static int lunix_chrdev_state_update(struct lunix_chrdev_state_struct *state)
 		else if(state->type == TEMP) new_data = new_data_raw->values[0];
 		else new_data = new_data_raw->values[0];
 
+		debug("Received number %ld", new_data);
+
 		// Update the timestamp in state
 		state->buf_timestamp = new_data_raw->last_update;
 
-		state->buf_data[(state->buf_lim)++] = new_data >> 8;
-		state->buf_data[(state->buf_lim)++] = new_data & 0xFF;
+		// Set the first 16 bytes of the buffer equal to the raw data
+		temp = (uint16_t *) state->buf_data;
+		*temp = (uint16_t) new_data;
+		state->buf_lim = 2;
 	}
 
 	return 0;

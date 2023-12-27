@@ -38,7 +38,7 @@ struct cdev lunix_chrdev_cdev;
  * Just a quick [unlocked] check to see if the cached
  * chrdev state needs to be updated from sensor measurements.
  */
-static int __attribute__((unused)) lunix_chrdev_state_needs_refresh(struct lunix_chrdev_state_struct *);
+static int lunix_chrdev_state_needs_refresh(struct lunix_chrdev_state_struct *);
 static int lunix_chrdev_state_needs_refresh(struct lunix_chrdev_state_struct *state)
 {
 	struct lunix_sensor_struct *sensor;

@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
                     printf("\n");
                 }
             }
-        }
+        } 
     }else if(!strcmp(argv[1], "fork")) {
         pid_t p[5];
         for(int i = 0; i < 5; i++) {
@@ -49,10 +49,12 @@ int main(int argc, char *argv[]){
             if(!p[i]) {
                 while(1) {
                     char t[11];
+                    printf("Trying to read, %d\n", i);
                     int tempres = read(fd, t, 3);
                     if(tempres < 0) {
                         printf("Something unexpected happened\n");
                     }else if(tempres) {
+                        printf("%d\n", i);
                         for(int i = 0; i < tempres; i++) printf("%c", *(t+i));
                         printf("\n");
                     }

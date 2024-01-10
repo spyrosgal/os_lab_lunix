@@ -277,21 +277,6 @@ out:
 	return ret;
 }
 
-void lunix_chrdev_vma_open(struct vm_area_struct *vma)
-{
-	debug("Calling open\n");
-}
-
-void lunix_chrdev_vma_close(struct vm_area_struct *vma)
-{
-	debug("Calling close\n");
-}
-
-static struct vm_operations_struct lunix_chrdev_vm_ops = {
-.open = lunix_chrdev_vma_open,
-.close = lunix_chrdev_vma_close,
-};
-
 static int lunix_chrdev_mmap(struct file *filp, struct vm_area_struct *vma)
 {
 	struct lunix_chrdev_state_struct *state;
@@ -304,11 +289,9 @@ static int lunix_chrdev_mmap(struct file *filp, struct vm_area_struct *vma)
 	msr_data = sensor->msr_data[state->type];
 
 	pfn = page_to_pfn(virt_to_page(msr_data));
-	
+
 	if (remap_pfn_range(vma, vma->vm_start, pfn, vma->vm_end - vma->vm_start, vma->vm_page_prot)) return -EAGAIN;
-	
-	vma->vm_ops = &lunix_chrdev_vm_ops;
-	lunix_chrdev_vma_open(vma);
+
 	return 0;
 }
 

@@ -276,18 +276,20 @@ static struct ext2_inode *ext2_get_inode(struct super_block *sb, ino_t ino,
 
 	/* Figure out the offset within the block group inode table */
 	/* ? */
-	offset = ino - 1 - block_group * inodes_pg;
+	offset = ((ino - 1)%EXT2_INODES_PER_GROUP(sb))*EXT2_INODE_SIZE(sb);
 	ext2_debug("offset: %lu\n", offset);
 
 	/* Return the pointer to the appropriate ext2_inode */
 	/* ? */
-	block = le32_to_cpu(gdp->bg_inode_table);
+	block = le32_to_cpu(gdp->bg_inode_table)+(offset >> EXT2_BLOCK_SIZE_BITS(sb));
 	ext2_debug("block: %lu\n", block);
 	bh = sb_bread(sb, block);
 	if(!bh) goto eio;
 
 	*p = bh;
-	return ((struct ext2_inode *) ((char *) bh->b_data + offset * inode_sz));
+
+	offset&=(EXT2_BLOCK_SIZE(sb) - 1);
+	return ((struct ext2_inode *) ((char *) bh->b_data + offset));
 
 einval:
 	ext2_error(sb, __func__, "bad inode number: %lu", (unsigned long)ino);

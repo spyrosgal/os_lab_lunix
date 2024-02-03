@@ -318,20 +318,26 @@ static int ext2_allocate_in_bg(struct super_block *sb, int group,
 	ext2_grpblk_t curr_free_bit;
 	unsigned long num;
 	void *addr = (void *) ((char *) bitmap_bh->b_data);
+	struct ext2_sb_info *sbi = EXT2_SB(sb);
+
+	ext2_debug("count=%u\n", *count);
 
 	if(!(*count)) return -1;
 
 	/* ? */
 	// Note that find_next_zero_bit_le starts looking at bit "offset" of "addr", inclusive
-	first_free_bit = (ext2_grpblk_t) find_next_zero_bit_le(addr, nblocks - 1, 0);
-	if(first_free_bit >= nblocks) {
-		*count = 0;
-		return -1;
+	first_free_bit = -1;
+	while(true) {
+		first_free_bit = (ext2_grpblk_t) find_next_zero_bit_le(addr, nblocks - first_free_bit - 1, first_free_bit + 1);
+		if(first_free_bit >= nblocks) {
+			*count = 0;
+			return -1;
+		}
+
+		ext2_debug("first_free_bit=%d\n", first_free_bit);
+
+		if(!ext2_set_bit_atomic(sb_bgl_lock(sbi, (unsigned int) group), first_free_bit % 8, addr + first_free_bit / 8)) break;
 	}
-
-	ext2_debug("first_free_bit=%d\n", first_free_bit);
-
-	ext2_set_bit_atomic(NULL, first_free_bit % 8, addr + first_free_bit / 8);
 
 	num = 1;
 	prev_free_bit = first_free_bit;
@@ -341,7 +347,7 @@ static int ext2_allocate_in_bg(struct super_block *sb, int group,
 		ext2_debug("curr_free_bit=%d\n", curr_free_bit);
 		if(curr_free_bit != prev_free_bit + 1 || curr_free_bit >= nblocks - prev_free_bit - 1) break;
 		prev_free_bit = curr_free_bit;
-		ext2_set_bit_atomic(NULL, curr_free_bit % 8, addr + curr_free_bit / 8);
+		ext2_set_bit_atomic(sb_bgl_lock(sbi, (unsigned int) group), curr_free_bit % 8, addr + curr_free_bit / 8);
 		num++;
 	}
 

@@ -257,7 +257,7 @@ static struct ext2_inode *ext2_get_inode(struct super_block *sb, ino_t ino,
 	unsigned long offset;
 	struct ext2_group_desc *gdp;
 	unsigned long inodes_pg = EXT2_INODES_PER_GROUP(sb);
-	int inode_sz = EXT2_INODE_SIZE(sb);
+	// int inode_sz = EXT2_INODE_SIZE(sb);
 	// unsigned long blocksize = sb->s_blocksize;
 
 	*p = NULL;

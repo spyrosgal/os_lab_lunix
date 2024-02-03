@@ -347,7 +347,7 @@ static int ext2_allocate_in_bg(struct super_block *sb, int group,
 		ext2_debug("curr_free_bit=%d\n", curr_free_bit);
 		if(curr_free_bit != prev_free_bit + 1 || curr_free_bit >= nblocks - prev_free_bit - 1) break;
 		prev_free_bit = curr_free_bit;
-		ext2_set_bit_atomic(sb_bgl_lock(sbi, (unsigned int) group), curr_free_bit % 8, addr + curr_free_bit / 8);
+		if(!ext2_set_bit_atomic(sb_bgl_lock(sbi, (unsigned int) group), curr_free_bit % 8, addr + curr_free_bit / 8)) break;
 		num++;
 	}
 

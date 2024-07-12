@@ -1,1 +1,1 @@
-For da team.
+Course assignments for the operating systems lab @ECE NTUA
